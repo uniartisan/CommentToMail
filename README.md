@@ -13,6 +13,7 @@
 6.修复数据库导入时偶发性的“Database Query Error” 
 
 #版权申明
+
 1.插件原版本及作者相关信息保留在插件文件的作者信息下方
 
 2.PHP Mailer文件来自于GitHub
