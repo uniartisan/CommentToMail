@@ -4,9 +4,9 @@
  *
  * @package CommentToMail
  * @author Uniartisan
- * @version 4.2.1
+ * @version 4.2.2
  * @link https://blog.uniartisan.com/archives/CommentToMail.html
- * latest dates 2019-04-26
+ * latest dates 2019-08-26
 */
 class CommentToMail_Plugin implements Typecho_Plugin_Interface
 {
@@ -37,6 +37,7 @@ class CommentToMail_Plugin implements Typecho_Plugin_Interface
 		self::dbInstall();
         Typecho_Plugin::factory('Widget_Feedback')->finishComment = array('CommentToMail_Plugin', 'parseComment');
         Typecho_Plugin::factory('Widget_Comments_Edit')->finishComment = array('CommentToMail_Plugin', 'parseComment');
+        Typecho_Plugin::factory('Widget_Comments_Edit')->mark = array('CommentToMail_Plugin', 'passComment');
         Helper::addAction(self::$action, 'CommentToMail_Action');
         Helper::addRoute('commentToMailProcessQueue', '/commentToMailProcessQueue/', 'CommentToMail_Action', 'processQueue');
         Helper::addPanel(1, self::$panel, '评论邮件提醒', '评论邮件提醒控制台', 'administrator');
@@ -260,6 +261,21 @@ class CommentToMail_Plugin implements Typecho_Plugin_Interface
         $time = $date->format('Y-m-d H:i:s');
     }
 
+    /**
+     * 通过邮件
+     *
+     * @access public
+     * @param $comment,$edit,$status 调用参数
+     * @return void
+     */
+    public static function passComment($comment,$edit,$status)
+    {        
+        if ('approved' == $status){
+                $edit->status = 'approved';
+                self::parseComment($edit);
+        }
+    }
+
 }
 /*V4.0.0（2017.09.08）
 1.基于原V3.1.0版本重新编写
@@ -281,4 +297,6 @@ V4.1.2(2018.04.30)
 V4.2.1(2018.12.20)
 1.修改部分函数引用，增添php7.3支持
 2.增添一个对于部分邮件供应商SPM的解决方案
+V4.2.2(2019.08.26)
+修复评论审核通过后没有发送邮件的Bug
 */
