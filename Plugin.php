@@ -4,9 +4,9 @@
  *
  * @package CommentToMail
  * @author Uniartisan
- * @version 4.2.2
+ * @version 4.2.4
  * @link https://blog.uniartisan.com/archives/CommentToMail.html
- * latest dates 2019-08-26
+ * latest dates 2020-03-09
 */
 class CommentToMail_Plugin implements Typecho_Plugin_Interface
 {
@@ -34,10 +34,11 @@ class CommentToMail_Plugin implements Typecho_Plugin_Interface
      */
     public static function activate()
     {
-		self::dbInstall();
+	self::dbInstall();
         Typecho_Plugin::factory('Widget_Feedback')->finishComment = array('CommentToMail_Plugin', 'parseComment');
         Typecho_Plugin::factory('Widget_Comments_Edit')->finishComment = array('CommentToMail_Plugin', 'parseComment');
         Typecho_Plugin::factory('Widget_Comments_Edit')->mark = array('CommentToMail_Plugin', 'passComment');
+       
         Helper::addAction(self::$action, 'CommentToMail_Action');
         Helper::addRoute('commentToMailProcessQueue', '/commentToMailProcessQueue/', 'CommentToMail_Action', 'processQueue');
         Helper::addPanel(1, self::$panel, '评论邮件提醒', '评论邮件提醒控制台', 'administrator');
@@ -97,7 +98,9 @@ class CommentToMail_Plugin implements Typecho_Plugin_Interface
 
         $validate = new Typecho_Widget_Helper_Form_Element_Checkbox('validate',
                 array('validate'=>'服务器需要验证',
-                    'ssl'=>'ssl加密'),
+                    'ssl'=>'ssl加密',
+                    'tls'=>'tls加密',
+                    'solve544'=>'启用抄送以规避544错误'),
                 array('validate'),'SMTP验证');
         $form->addInput($validate);
         
@@ -124,7 +127,8 @@ class CommentToMail_Plugin implements Typecho_Plugin_Interface
                 array('to_owner' => '有评论及回复时，发邮件通知博主。',
                     'to_guest' => '评论被回复时，发邮件通知评论者。',
                     'to_me'=>'自己回复自己的评论时，发邮件通知。(同时针对博主和访客)',
-                    'to_log' => '记录邮件发送日志。'),
+                    'force_mail' =>'强制忽略用户选择，解决回复审核后评论无通知。',
+                    'to_log' => '记录邮件发送日志。（开发模式）'),
                 array('to_owner','to_guest'), '其他设置',_t('选中该选项插件会在数据库log中记录发送日志。'));
         $form->addInput($other->multiMode());
 
@@ -245,6 +249,7 @@ class CommentToMail_Plugin implements Typecho_Plugin_Interface
         } else {
             $cfg['banMail'] = 1;
         }
+        $cfg['banMail'] = in_array('force_mail', Helper::options()->plugin('CommentToMail')->other) ? true : false;
 
         // 添加至队列
         $cfg      = (object)$cfg;
@@ -293,10 +298,18 @@ V4.1.1（2017.12.21）
 *******************************************************
 V4.1.2(2018.04.30)
 修复数据库导入时偶发性的“Database Query Error” 
-*******************************************************
+'solve544'
 V4.2.1(2018.12.20)
 1.修改部分函数引用，增添php7.3支持
 2.增添一个对于部分邮件供应商SPM的解决方案
+*******************************************************
 V4.2.2(2019.08.26)
 修复评论审核通过后没有发送邮件的Bug
+*******************************************************
+v4.2.3/4.2.4(2020.03.08/09)
+SMTP 加入 TLS 支持（目前支持 SSL、TLS)
+更新 PHPMailer 至 6.1.4 (原来为5.x,修复多个漏洞）
+修复待审核评论通过后无法邮件回复的设计疏忽
+优化之前蹩脚的 544 解决方案 
+代码细节整理
 */
