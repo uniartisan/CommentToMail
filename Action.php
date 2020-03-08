@@ -1,4 +1,19 @@
 <?php
+/**
+ * CommentToMail Plugin
+ * 网页监控发送提醒邮件到博主或访客的邮箱
+ * 
+ * @copyright  Copyright (c) 2020 Byends (https://blog.uniartisan.com)
+ * @license    GNU General Public License 3.0
+ */
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+require_once 'lib/PHPMailer.php';
+require_once 'lib/SMTP.php';
+require_once 'lib/Exception.php';
+
 class CommentToMail_Action extends Typecho_Widget implements Widget_Interface_Do
 {
     /** @var  数据操作对象 */
@@ -277,7 +292,6 @@ class CommentToMail_Action extends Typecho_Widget implements Widget_Interface_Do
     public function sendMail()
     {
         /** 载入邮件组件 */
-        require_once $this->_dir . '/lib/class.phpmailer.php';
         $mailer = new PHPMailer();
         $mailer->CharSet = 'UTF-8';
         $mailer->Encoding = 'base64';
@@ -299,6 +313,8 @@ class CommentToMail_Action extends Typecho_Widget implements Widget_Interface_Do
 
                 if (in_array('ssl', $this->_cfg->validate)) {
                     $mailer->SMTPSecure = "ssl";
+                } else if (in_array('tls', $this->_cfg->validate)) {
+                    $mailer->SMTPSecure = "tls";
                 }
 
                 $mailer->Host     = $this->_cfg->host;
@@ -313,7 +329,9 @@ class CommentToMail_Action extends Typecho_Widget implements Widget_Interface_Do
         $mailer->AddReplyTo($this->_email->to, $this->_email->toName);
         $mailer->Subject = $this->_email->subject;
         $mailer->AltBody = $this->_email->altBody;
-        /*$mailer->AddCC($this->_email->from);*/   /*国内部分邮件服务提供商若出现“DT:SPM CODE 544”错误需要解除此行注释 */
+        if (in_array('solve544', $this->_cfg->validate)) {          //躲避审查造成的 544 错误
+            $mailer->AddCC($this->_email->from);
+        }
         $mailer->MsgHTML($this->_email->msgHtml);
         $mailer->AddAddress($this->_email->to, $this->_email->toName);
         $mailer->SMTPOptions = array('ssl' => array('verify_peer' => false,'verify_peer_name' => false,'allow_self_signed' => true) );
