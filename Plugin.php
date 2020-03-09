@@ -38,7 +38,6 @@ class CommentToMail_Plugin implements Typecho_Plugin_Interface
         Typecho_Plugin::factory('Widget_Feedback')->finishComment = array('CommentToMail_Plugin', 'parseComment');
         Typecho_Plugin::factory('Widget_Comments_Edit')->finishComment = array('CommentToMail_Plugin', 'parseComment');
         Typecho_Plugin::factory('Widget_Comments_Edit')->mark = array('CommentToMail_Plugin', 'passComment');
-       
         Helper::addAction(self::$action, 'CommentToMail_Action');
         Helper::addRoute('commentToMailProcessQueue', '/commentToMailProcessQueue/', 'CommentToMail_Action', 'processQueue');
         Helper::addPanel(1, self::$panel, '评论邮件提醒', '评论邮件提醒控制台', 'administrator');
@@ -248,8 +247,9 @@ class CommentToMail_Plugin implements Typecho_Plugin_Interface
             $cfg['banMail'] = 0;
         } else {
             $cfg['banMail'] = 1;
+            $cfg['banMail'] = in_array('force_mail', Helper::options()->plugin('CommentToMail')->other) ? false : true;
         }
-        $cfg['banMail'] = in_array('force_mail', Helper::options()->plugin('CommentToMail')->other) ? true : false;
+        
 
         // 添加至队列
         $cfg      = (object)$cfg;
