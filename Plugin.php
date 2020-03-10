@@ -4,9 +4,9 @@
  *
  * @package CommentToMail
  * @author Uniartisan
- * @version 4.2.4
+ * @version 4.2.5
  * @link https://blog.uniartisan.com/archives/CommentToMail.html
- * latest dates 2020-03-09
+ * latest dates 2020-03-10
 */
 class CommentToMail_Plugin implements Typecho_Plugin_Interface
 {
@@ -127,8 +127,9 @@ class CommentToMail_Plugin implements Typecho_Plugin_Interface
                     'to_guest' => '评论被回复时，发邮件通知评论者。',
                     'to_me'=>'自己回复自己的评论时，发邮件通知。(同时针对博主和访客)',
                     'force_mail' =>'强制忽略用户选择，解决回复审核后评论无通知。',
-                    'to_log' => '记录邮件发送日志。（开发模式）'),
-                array('to_owner','to_guest'), '其他设置',_t('选中该选项插件会在数据库log中记录发送日志。'));
+                    'force_wait' => '启用间隔时间以应对反垃圾策略。(建议)',
+                    'to_log' => '记录邮件发送日志。(开发模式)'),
+                array('to_owner','to_guest'), '其他设置',_t('由于Typecho钩子限制，开启审核后通过审核会重复通知。'));
         $form->addInput($other->multiMode());
 
         $titleForOwner = new Typecho_Widget_Helper_Form_Element_Text('titleForOwner',null,"[{title}] 一文有新的评论",
@@ -312,4 +313,7 @@ SMTP 加入 TLS 支持（目前支持 SSL、TLS)
 修复待审核评论通过后无法邮件回复的设计疏忽
 优化之前蹩脚的 544 解决方案 
 代码细节整理
+*******************************************************
+v4.2.5(2020.03.10)
+新增邮件等待
 */

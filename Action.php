@@ -101,7 +101,12 @@ class CommentToMail_Action extends Typecho_Widget implements Widget_Interface_Do
 			}else
 			{
 				array_push( $fail_id, $mail['id']);
-			}
+            }
+
+            // 排队反垃圾
+            if(in_array('force_wait', $this->_cfg->other)){
+                sleep(3);
+            }
         }
 		$this->clean();
         $this->response->throwJson(array(
