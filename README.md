@@ -16,7 +16,7 @@
 
 8.优化之前蹩脚的 544 解决方案
 
-#版权申明
+## 版权申明
 
 1.插件原版本及作者相关信息保留在插件文件的作者信息下方
 
@@ -25,11 +25,11 @@
 3.转载或重制请保留作者信息
 
 
-#使用方法
+## 使用方法
 https://blog.uniartisan.com/archives/CommentToMail.html
 
-#下载地址
+## 下载地址
 https://blog.uniartisan.com/app/CommentToMail.zip
 
-# 提问的艺术
+## 提问的艺术
 https://github.com/ryanhanwu/How-To-Ask-Questions-The-Smart-Way/blob/master/README-zh_CN.md
