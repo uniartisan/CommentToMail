@@ -69,7 +69,7 @@ class CommentToMail_Plugin implements Typecho_Plugin_Interface
     public static function config(Typecho_Widget_Helper_Form $form)
     {
         $options = Typecho_Widget::widget('Widget_Options');
-           echo "<a href='https://blog.uniartisan.com/archives/CommentToMail.html'>请在设置前仔细阅读相关说明</a>";
+        echo "<a href='https://blog.uniartisan.com/archives/CommentToMail.html'>请在设置前仔细阅读相关说明</a>";
         $mode= new Typecho_Widget_Helper_Form_Element_Radio('mode',
                 array( 'smtp' => 'smtp',
                        'mail' => 'mail()',

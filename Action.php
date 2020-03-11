@@ -54,6 +54,12 @@ class CommentToMail_Action extends Typecho_Widget implements Widget_Interface_Do
         $this->deliverMail($this->_cfg->key);
     }
     
+    // 记录等待日志
+    public function waitLog(){
+        if(in_array('force_wait', $this->_cfg->other)){
+            $log .= ",并开启队列等待,";
+        }
+    }
     
     public function deliverMail($key)
     {
@@ -105,7 +111,7 @@ class CommentToMail_Action extends Typecho_Widget implements Widget_Interface_Do
 
             // 排队反垃圾
             if(in_array('force_wait', $this->_cfg->other)){
-                sleep(3);
+                sleep(1);
             }
         }
 		$this->clean();
@@ -158,6 +164,7 @@ class CommentToMail_Action extends Typecho_Widget implements Widget_Interface_Do
                     }
                     $this->authorMail()->sendMail();
                     $log .= "向博主发信";
+                    $this->waitLog();
                 }else
                 {
                     $log .= "插件设置为不发送此类邮件或博主拒收邮件!\r\n";
@@ -189,6 +196,7 @@ class CommentToMail_Action extends Typecho_Widget implements Widget_Interface_Do
                     $this->_email->originalAuthor = $original['author'];
                     $this->guestMail()->sendMail();
                     $log .= "向访客发信";
+                    $this->waitLog();
                 }
             }else
             {
