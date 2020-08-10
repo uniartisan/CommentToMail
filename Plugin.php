@@ -4,9 +4,9 @@
  *
  * @package CommentToMail
  * @author Uniartisan
- * @version 4.2.5
+ * @version 4.2.6
  * @link https://blog.uniartisan.com/archives/CommentToMail.html
- * latest dates 2020-03-10
+ * latest dates 2020-08-10
 */
 class CommentToMail_Plugin implements Typecho_Plugin_Interface
 {
@@ -82,13 +82,13 @@ class CommentToMail_Plugin implements Typecho_Plugin_Interface
         $form->addInput($host->addRule('required', _t('必须填写一个SMTP服务器地址')));
 
         $port = new Typecho_Widget_Helper_Form_Element_Text('port', NULL, '25',
-                _t('SMTP端口'), _t('SMTP服务端口,一般为25。'));
+                _t('SMTP端口'), _t('SMTP服务端口,一般为25。SSL加密一般为465'));
         $port->input->setAttribute('class', 'mini');
         $form->addInput($port->addRule('required', _t('必须填写SMTP服务端口'))
                 ->addRule('isInteger', _t('端口号必须是纯数字')));
 
         $user = new Typecho_Widget_Helper_Form_Element_Text('user', NULL, NULL,
-                _t('SMTP用户'),_t('SMTP服务验证用户名,一般为邮箱名如：youname@domain.com'));
+                _t('SMTP用户'),_t('SMTP服务验证用户名,一般为邮箱名如：yourname@domain.com'));
         $form->addInput($user->addRule('required', _t('SMTP服务验证用户名')));
 
         $pass = new Typecho_Widget_Helper_Form_Element_Password('pass', NULL, NULL,
@@ -115,6 +115,14 @@ class CommentToMail_Plugin implements Typecho_Plugin_Interface
                 _t('模板中“联系我”的邮件地址'),_t('联系我用的邮件地址,如为空则使用文章作者个人设置中的邮件地址！'));
         $form->addInput($contactme->addRule('email', _t('请填写正确的邮件地址！')));
 
+        $titleForOwner = new Typecho_Widget_Helper_Form_Element_Text('titleForOwner',null,"[{title}] 一文有新的评论",
+                _t('博主接收邮件标题'));
+        $form->addInput($titleForOwner->addRule('required', _t('博主接收邮件标题 不能为空')));
+
+        $titleForGuest = new Typecho_Widget_Helper_Form_Element_Text('titleForGuest',null,"您在 [{title}] 的评论有了回复",
+                _t('访客接收邮件标题'));
+        $form->addInput($titleForGuest->addRule('required', _t('访客接收邮件标题 不能为空')));
+
         $status = new Typecho_Widget_Helper_Form_Element_Checkbox('status',
                 array('approved' => '提醒已通过评论',
                         'waiting' => '提醒待审核评论',
@@ -132,15 +140,10 @@ class CommentToMail_Plugin implements Typecho_Plugin_Interface
                 array('to_owner','to_guest'), '其他设置',_t('由于Typecho钩子限制，开启审核后通过审核会重复通知。'));
         $form->addInput($other->multiMode());
 
-        $titleForOwner = new Typecho_Widget_Helper_Form_Element_Text('titleForOwner',null,"[{title}] 一文有新的评论",
-                _t('博主接收邮件标题'));
-        $form->addInput($titleForOwner->addRule('required', _t('博主接收邮件标题 不能为空')));
+        $force_waiting_time = new Typecho_Widget_Helper_Form_Element_Text('force_waiting_time', NULL, '1',
+        _t('强制间隔的时间'), _t('强制间隔的时间，缺省值为1秒，建议小于3秒,请填入整数时间\n此选项仅在开启时有效'));
+        $form->addInput($force_waiting_time->addRule('isInteger', _t('请填入整数时间')));
 
-        $titleForGuest = new Typecho_Widget_Helper_Form_Element_Text('titleForGuest',null,"您在 [{title}] 的评论有了回复",
-                _t('访客接收邮件标题'));
-        $form->addInput($titleForGuest->addRule('required', _t('访客接收邮件标题 不能为空')));
-
-        
         $entryUrl = ($options->rewrite) ? $options->siteUrl : $options->siteUrl . 'index.php';
 
         $deliverMailUrl = rtrim($entryUrl, '/') . '/action/' . self::$action . '?do=deliverMail&key=[yourKey]';
