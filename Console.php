@@ -1,4 +1,5 @@
 <?php
+
 /**
  * 评论邮件提醒 控制台
  */
@@ -13,7 +14,7 @@ class CommentToMail_Console extends Typecho_Widget
      * @var string
      */
     private $_currentFile;
-    
+
     /**
      * 执行函数
      *
@@ -29,14 +30,16 @@ class CommentToMail_Console extends Typecho_Widget
         $files = glob($this->_dir . '/*.{html,HTML}', GLOB_BRACE);
         $this->_currentFile = $this->request->get('file', 'owner.html');
 
-        if (preg_match("/^([_0-9a-z-\.\ ])+$/i", $this->_currentFile)
-            && file_exists($this->_dir . '/' . $this->_currentFile)) {
+        if (
+            preg_match("/^([_0-9a-z-\.\ ])+$/i", $this->_currentFile)
+            && file_exists($this->_dir . '/' . $this->_currentFile)
+        ) {
             foreach ($files as $file) {
                 if (file_exists($file)) {
                     $file = basename($file);
                     $this->push(array(
                         'file'      =>  $file,
-                        'current'   =>  ($file == $this->_currentFile)
+                        'current'   => ($file == $this->_currentFile)
                     ));
                 }
             }
@@ -90,7 +93,7 @@ class CommentToMail_Console extends Typecho_Widget
     {
         return $this->_currentFile;
     }
-    
+
     /**
      * 邮件测试表单
      * @return Typecho_Widget_Helper_Form
@@ -99,8 +102,10 @@ class CommentToMail_Console extends Typecho_Widget
     {
         /** 构建表单 */
         $options = Typecho_Widget::widget('Widget_Options');
-        $form = new Typecho_Widget_Helper_Form(Typecho_Common::url('/action/' . CommentToMail_Plugin::$action, $options->index),
-            Typecho_Widget_Helper_Form::POST_METHOD);
+        $form = new Typecho_Widget_Helper_Form(
+            Typecho_Common::url('/action/' . CommentToMail_Plugin::$action, $options->index),
+            Typecho_Widget_Helper_Form::POST_METHOD
+        );
 
         /** 收件人名称 */
         $toName = new Typecho_Widget_Helper_Form_Element_Text('toName', NULL, NULL, _t('收件人名称'), _t('为空则使用博主昵称'));

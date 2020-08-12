@@ -1,4 +1,5 @@
 <?php
+
 /**
  * CommentToMail Plugin
  * 网页监控发送提醒邮件到博主或访客的邮箱
@@ -18,23 +19,23 @@ class CommentToMail_Action extends Typecho_Widget implements Widget_Interface_Do
 {
     /** @var  数据操作对象 */
     private $_db;
-	private $_prefix;
-    
+    private $_prefix;
+
     /** @var  插件根目录 */
     private $_dir;
-    
+
     /** @var  插件配置信息 */
     private $_cfg;
-    
+
     /** @var  系统配置信息 */
     private $_options;
-    
+
     /** @var bool 是否记录日志 */
     private $_isMailLog = false;
-    
+
     /** @var 当前登录用户 */
     private $_user;
-    
+
     /** @var  邮件内容信息 */
     private  $_email;
 
@@ -44,91 +45,83 @@ class CommentToMail_Action extends Typecho_Widget implements Widget_Interface_Do
     public function processQueue()
     {
         $this->init();
-        if (!isset($this->_cfg->verify) || !in_array('nonAuth', $this->_cfg->verify))
-        {
-            $this->response->throwJson( array(
+        if (!isset($this->_cfg->verify) || !in_array('nonAuth', $this->_cfg->verify)) {
+            $this->response->throwJson(array(
                 'result' => 0,
                 'msg' => 'Forbidden'
-                ));
+            ));
         }
         $this->deliverMail($this->_cfg->key);
     }
-    
+
     /** 记录等待日志 */
-    public function waitLog(){
-        if(in_array('force_wait', $this->_cfg->other)){
+    public function waitLog()
+    {
+        if (in_array('force_wait', $this->_cfg->other)) {
             $log .= ",并开启队列等待,";
         }
     }
-    
+
     public function deliverMail($key)
     {
-        if ($key != $this->_cfg->key)
-        {
-            $this->response->throwJson( array(
+        if ($key != $this->_cfg->key) {
+            $this->response->throwJson(array(
                 'result' => 0,
-                'msg' =>'No permission'
-            )); 
+                'msg' => 'No permission'
+            ));
         }
 
-        $mailQueue = $this->_db->fetchAll($this->_db->select('id', 'content')->from($this->_prefix.'mail')
-                            ->where('sent = ?', 0));
+        $mailQueue = $this->_db->fetchAll($this->_db->select('id', 'content')->from($this->_prefix . 'mail')
+            ->where('sent = ?', 0));
         $success_id = array();
-		$fail_id = array();
-        foreach($mailQueue as &$mail)
-        {
+        $fail_id = array();
+        foreach ($mailQueue as &$mail) {
             $log = "";
             $is_success = false;
-			$this->_email_id = $mail['id'];
+            $this->_email_id = $mail['id'];
             $mailInfo = unserialize(base64_decode($mail['content']));
-            
-            /** 发送邮件 */ 
-			if ($mailInfo)
-			{
-				if ($this->processMail($mailInfo))
-				{
-					$this->_db->query($this->_db->update($this->_prefix.'mail')->rows(array('sent' => 1))->where('id = ?', $mail['id']));
-					$is_success = true;
-				}
-			}else
-			{
-				$log .= 'unserialize error\n';
-				$is_success = false;
-			}
+
+            /** 发送邮件 */
+            if ($mailInfo) {
+                if ($this->processMail($mailInfo)) {
+                    $this->_db->query($this->_db->update($this->_prefix . 'mail')->rows(array('sent' => 1))->where('id = ?', $mail['id']));
+                    $is_success = true;
+                }
+            } else {
+                $log .= 'unserialize error\n';
+                $is_success = false;
+            }
 
             /** 记录结果 */
-			if (!empty($log))
-			{
-				$this->mailLog(true, $log);
-			}
-			if ($is_success)
-			{
-				array_push( $success_id, $mail['id']);
-			}else
-			{
-				array_push( $fail_id, $mail['id']);
+            if (!empty($log)) {
+                $this->mailLog(true, $log);
+            }
+            if ($is_success) {
+                array_push($success_id, $mail['id']);
+            } else {
+                array_push($fail_id, $mail['id']);
             }
 
             /** 排队反垃圾 */
-            if(in_array('force_wait', $this->_cfg->other)){
+            if (in_array('force_wait', $this->_cfg->other)) {
                 sleep($this->_cfg->force_waiting_time);
             }
         }
-		$this->clean();
+        $this->clean();
         $this->response->throwJson(array(
-            'result'=> true,
-            'amount'=> count($mailQueue),
-            'success'=> array( 
-				'amount' => count($success_id),
-				'id' => $success_id
-				),
-            'fail' => array( 
-				'amount' => count($fail_id),
-				'id' => $fail_id
-				)
-            ));
+            'result' => true,
+            'amount' => count($mailQueue),
+            'success' => array(
+                'amount' => count($success_id),
+                'id' => $success_id
+            ),
+            'fail' => array(
+                'amount' => count($fail_id),
+                'id' => $fail_id
+            )
+        ));
     }
-    
+
     public function processMail($mailInfo)
     {
         $this->_email = $mailInfo;
@@ -137,7 +130,7 @@ class CommentToMail_Action extends Typecho_Widget implements Widget_Interface_Do
         if ($this->_email->banMail) {
             $this->ban($this->_email->coid, true);
         }
-        
+
         //发件人邮箱
         $this->_email->from = $this->_cfg->user;
         //发件人名称
@@ -151,32 +144,32 @@ class CommentToMail_Action extends Typecho_Widget implements Widget_Interface_Do
         $toMe = (in_array('to_me', $this->_cfg->other) && $this->_email->ownerId == $this->_email->authorId) ? true : false;
 
         //向博主发信
-        if (0 == $this->_email->parent)
-        {
-                if(in_array($this->_email->status, $this->_cfg->status) && in_array('to_owner', $this->_cfg->other)
-                    && ( $toMe || $this->_email->ownerId != $this->_email->authorId))
-                {
-                    if (empty($this->_cfg->mail)) {
-                        Typecho_Widget::widget('Widget_Users_Author@temp' . $this->_email->cid, array('uid' => $this->_email->ownerId))->to($user);
-                        $this->_email->to = $user->mail;
-                    } else {
-                        $this->_email->to = $this->_cfg->mail;
-                    }
-                    $this->authorMail()->sendMail();
-                    $log .= "向博主发信";
-                    $this->waitLog();
-                }else
-                {
-                    $log .= "插件设置为不发送此类邮件或博主拒收邮件!\r\n";
+        if (0 == $this->_email->parent) {
+            if (
+                in_array($this->_email->status, $this->_cfg->status) && in_array('to_owner', $this->_cfg->other)
+                && ($toMe || $this->_email->ownerId != $this->_email->authorId)
+            ) {
+                if (empty($this->_cfg->mail)) {
+                    Typecho_Widget::widget('Widget_Users_Author@temp' . $this->_email->cid, array('uid' => $this->_email->ownerId))->to($user);
+                    $this->_email->to = $user->mail;
+                } else {
+                    $this->_email->to = $this->_cfg->mail;
                 }
+                $this->authorMail()->sendMail();
+                $log .= "向博主发信";
+                $this->waitLog();
+            } else {
+                $log .= "插件设置为不发送此类邮件或博主拒收邮件!\r\n";
+            }
         }
 
         /** 向访客发信 */
-        if (0 != $this->_email->parent)
-        {   if('approved' == $this->_email->status 
-            && in_array('to_guest', $this->_cfg->other)
-            && !$this->ban($this->_email->parent))
-            {
+        if (0 != $this->_email->parent) {
+            if (
+                'approved' == $this->_email->status
+                && in_array('to_guest', $this->_cfg->other)
+                && !$this->ban($this->_email->parent)
+            ) {
                 /**  如果联系我的邮件地址为空，则使用文章作者的邮件地址 */
                 if (empty($this->_email->contactme)) {
                     if (!isset($user) || !$user) {
@@ -187,10 +180,12 @@ class CommentToMail_Action extends Typecho_Widget implements Widget_Interface_Do
                     $this->_email->contactme = $this->_cfg->contactme;
                 }
                 $original = $this->_db->fetchRow($this->_db->select('author', 'mail', 'text')
-                                                           ->from('table.comments')
-                                                           ->where('coid = ?', $this->_email->parent));
-                if (in_array('to_me', $this->_cfg->other) 
-                    || $this->_email->mail != $original['mail']) {
+                    ->from('table.comments')
+                    ->where('coid = ?', $this->_email->parent));
+                if (
+                    in_array('to_me', $this->_cfg->other)
+                    || $this->_email->mail != $original['mail']
+                ) {
                     $this->_email->to             = $original['mail'];
                     $this->_email->originalText   = $original['text'];
                     $this->_email->originalAuthor = $original['author'];
@@ -198,21 +193,19 @@ class CommentToMail_Action extends Typecho_Widget implements Widget_Interface_Do
                     $log .= "向访客发信";
                     $this->waitLog();
                 }
-            }else
-            {
+            } else {
                 $log .= "插件设置为不发送此类邮件或被评论访客拒收邮件!\r\n";
             }
         }
         $date = new Typecho_Date(Typecho_Date::gmtTime());
         $time = $date->format('Y-m-d H:i:s');
-        if (empty($log))
-        {
-           $log .= "邮件发送完毕!\r\n";
+        if (empty($log)) {
+            $log .= "邮件发送完毕!\r\n";
         }
         $log .= in_array('to_guest', $this->_cfg->other);
-		$this->mailLog(false, $time . " " . $log);
+        $this->mailLog(false, $time . " " . $log);
         return true;
-}
+    }
 
     /**
      * 作者邮件信息
@@ -255,7 +248,7 @@ class CommentToMail_Action extends Typecho_Widget implements Widget_Interface_Do
 
         $this->_email->msgHtml = str_replace($search, $replace, $this->getTemplate('owner'));
         $this->_email->subject = str_replace($search, $replace, $this->_email->titleForOwner);
-        $this->_email->altBody = "作者：".$this->_email->author."\r\n链接：".$this->_email->permalink."\r\n评论：\r\n".$this->_email->text;
+        $this->_email->altBody = "作者：" . $this->_email->author . "\r\n链接：" . $this->_email->permalink . "\r\n评论：\r\n" . $this->_email->text;
 
         return $this;
     }
@@ -294,7 +287,7 @@ class CommentToMail_Action extends Typecho_Widget implements Widget_Interface_Do
 
         $this->_email->msgHtml = str_replace($search, $replace, $this->getTemplate('guest'));
         $this->_email->subject = str_replace($search, $replace, $this->_email->titleForGuest);
-        $this->_email->altBody = "作者：".$this->_email->author."\r\n链接：".$this->_email->permalink."\r\n评论：\r\n".$this->_email->text;
+        $this->_email->altBody = "作者：" . $this->_email->author . "\r\n链接：" . $this->_email->permalink . "\r\n评论：\r\n" . $this->_email->text;
 
         return $this;
     }
@@ -310,8 +303,7 @@ class CommentToMail_Action extends Typecho_Widget implements Widget_Interface_Do
         $mailer->Encoding = 'base64';
 
         /** 选择发信模式 */
-        switch ($this->_cfg->mode)
-        {
+        switch ($this->_cfg->mode) {
             case 'mail':
                 break;
             case 'sendmail':
@@ -347,7 +339,7 @@ class CommentToMail_Action extends Typecho_Widget implements Widget_Interface_Do
         }
         $mailer->MsgHTML($this->_email->msgHtml);
         $mailer->AddAddress($this->_email->to, $this->_email->toName);
-        $mailer->SMTPOptions = array('ssl' => array('verify_peer' => false,'verify_peer_name' => false,'allow_self_signed' => true) );
+        $mailer->SMTPOptions = array('ssl' => array('verify_peer' => false, 'verify_peer_name' => false, 'allow_self_signed' => true));
 
         if ($result = $mailer->Send()) {
             $this->mailLog();
@@ -355,7 +347,7 @@ class CommentToMail_Action extends Typecho_Widget implements Widget_Interface_Do
             $this->mailLog(false, $mailer->ErrorInfo . "\r\n");
             $result = $mailer->ErrorInfo;
         }
-        
+
         $mailer->ClearAddresses();
         $mailer->ClearReplyTos();
 
@@ -375,8 +367,8 @@ class CommentToMail_Action extends Typecho_Widget implements Widget_Interface_Do
             $guest = substr($this->_email->to, 0, 1) . '***' . $guest[1];
             $content  = $content ? $content : "向 " . $guest . " 发送邮件成功！\r\n";
         }
-		/** expression */
-        $this->_db->query($this->_db->update($this->_prefix.'mail')->rows(array('log' => $content))->where('id = ?', $this->_email_id));
+        /** expression */
+        $this->_db->query($this->_db->update($this->_prefix . 'mail')->rows(array('log' => $content))->where('id = ?', $this->_email_id));
     }
 
     /*
@@ -389,7 +381,7 @@ class CommentToMail_Action extends Typecho_Widget implements Widget_Interface_Do
         $filename = $this->_dir . '/' . $template;
 
         if (!file_exists($filename)) {
-           throw new Typecho_Widget_Exception('模板文件' . $template . '不存在', 404);
+            throw new Typecho_Widget_Exception('模板文件' . $template . '不存在', 404);
         }
 
         return file_get_contents($this->_dir . '/' . $template);
@@ -421,28 +413,26 @@ class CommentToMail_Action extends Typecho_Widget implements Widget_Interface_Do
                 return true;
             }
         }
-        
+
         return false;
     }
 
-	public function clean()
-	{
-		$clean_time = $this->_cfg->clean_time;
+    public function clean()
+    {
+        $clean_time = $this->_cfg->clean_time;
         $db = $this->_db;
         $prefix = $this->_prefix;
 
-		if ($clean_time == 'immediate')
-		{
+        if ($clean_time == 'immediate') {
 
-			$id = $db->query(
-				$this->_db->delete($this->_prefix.'mail')
-								->where('sent = ?', 1)
-			);
-		}
+            $id = $db->query(
+                $this->_db->delete($this->_prefix . 'mail')
+                    ->where('sent = ?', 1)
+            );
+        }
+    }
 
-	}
-	
-	
+
     /**
      * 邮件发送测试
      */
@@ -455,7 +445,7 @@ class CommentToMail_Action extends Typecho_Widget implements Widget_Interface_Do
         $this->init();
         $this->_isMailLog = false;
         $email = $this->request->from('toName', 'to', 'title', 'content');
-        
+
         $this->_email->from = $this->_cfg->user;
         $this->_email->fromName = $this->_cfg->fromName ? $this->_cfg->fromName : $this->_options->title;
         $this->_email->to = $email['to'] ? $email['to'] : $this->_user->mail;
@@ -467,8 +457,10 @@ class CommentToMail_Action extends Typecho_Widget implements Widget_Interface_Do
         $result = $this->sendMail();
 
         /** 提示信息 */
-        $this->widget('Widget_Notice')->set(true === $result ? _t('邮件发送成功') : _t('邮件发送失败：' . $result),
-            true === $result ? 'success' : 'notice');
+        $this->widget('Widget_Notice')->set(
+            true === $result ? _t('邮件发送成功') : _t('邮件发送失败：' . $result),
+            true === $result ? 'success' : 'notice'
+        );
 
         /** 转向原页 */
         $this->response->goBack();
@@ -507,11 +499,11 @@ class CommentToMail_Action extends Typecho_Widget implements Widget_Interface_Do
         $this->_dir = dirname(__FILE__);
         $this->_db = Typecho_Db::get();
         $this->_prefix = $this->_db->getPrefix();
- 
+
         $this->_user = $this->widget('Widget_User');
         $this->_options = $this->widget('Widget_Options');
         $this->_cfg = Helper::options()->plugin('CommentToMail');
-		$this->_isMailLog = in_array('to_log', $this->_cfg->other) ? true : false;
+        $this->_isMailLog = in_array('to_log', $this->_cfg->other) ? true : false;
     }
 
     /**
