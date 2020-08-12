@@ -77,6 +77,8 @@ class CommentToMail_Plugin implements Typecho_Plugin_Interface
                 $newVer = self::check_update("newVer");
                 if (self::$version != $newVer && $newVer != "Error") {
                         Typecho_Widget::widget('Widget_Notice')->set(_t('请到 https://github.com/uniartisan/CommentToMail 更新插件，当前最新版：' . $newVer), 'success');
+                } elseif ($newVer == "Error") {
+                        Typecho_Widget::widget('Widget_Notice')->set(_t('对不起, 您的主机不支持 php-curl 扩展或没有打开 allow_url_fopen 功能, 无法自动检测更新'), 'fail');
                 } else {
                         Typecho_Widget::widget('Widget_Notice')->set(_t('欢迎 Star, Fork, Pull requests :)'), 'success');
                 }
