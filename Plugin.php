@@ -5,14 +5,14 @@
  *
  * @package CommentToMail
  * @author Uniartisan
- * @version 4.2.7
+ * @version 4.2.8
  * @link https://blog.uniartisan.com/archives/CommentToMail.html
  * latest dates 2020-08-10
  */
 class CommentToMail_Plugin implements Typecho_Plugin_Interface
 {
         /** update 信息 */
-        public static $version = '4.2.7';
+        public static $version = '4.2.8';
 
         /** @var string 提交路由前缀 */
         public static $action = 'comment-to-mail';
