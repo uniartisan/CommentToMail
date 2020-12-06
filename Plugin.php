@@ -5,14 +5,14 @@
  *
  * @package CommentToMail
  * @author Uniartisan
- * @version 4.2.8
+ * @version 4.2.9
  * @link https://blog.uniartisan.com/archives/CommentToMail.html
  * latest dates 2020-08-10
  */
 class CommentToMail_Plugin implements Typecho_Plugin_Interface
 {
         /** update 信息 */
-        public static $version = '4.2.8';
+        public static $version = '4.2.9';
 
         /** @var string 提交路由前缀 */
         public static $action = 'comment-to-mail';
@@ -74,14 +74,23 @@ class CommentToMail_Plugin implements Typecho_Plugin_Interface
         {
                 $options = Typecho_Widget::widget('Widget_Options');
                 echo "<a href='https://blog.uniartisan.com/archives/CommentToMail.html'>请在设置前仔细阅读相关说明</a>";
-                $newVer = self::check_update("newVer");
-                if (self::$version != $newVer && $newVer != "Error") {
+
+                /* 检查版本更新 */
+                if (in_array('check_beta', Helper::options()->plugin('CommentToMail')->other) == true){
+                        $newVer = self::check_update("betaVer");
+                }
+                else{
+                        $newVer = self::check_update("newVer");
+                }
+                
+                if (strcmp(self::$version,$newVer) < 0 && $newVer != "Error") {
                         Typecho_Widget::widget('Widget_Notice')->set(_t('请到 https://github.com/uniartisan/CommentToMail 更新插件，当前最新版：' . $newVer), 'success');
                 } elseif ($newVer == "Error") {
                         Typecho_Widget::widget('Widget_Notice')->set(_t('对不起, 您的主机不支持 php-curl 扩展或没有打开 allow_url_fopen 功能, 无法自动检测更新'), 'fail');
                 } else {
                         Typecho_Widget::widget('Widget_Notice')->set(_t('欢迎 Star, Fork, Pull requests :)'), 'success');
                 }
+
                 $mode = new Typecho_Widget_Helper_Form_Element_Radio(
                         'mode',
                         array(
@@ -208,7 +217,8 @@ class CommentToMail_Plugin implements Typecho_Plugin_Interface
                                 'to_me' => '自己回复自己的评论时，发邮件通知。(同时针对博主和访客)',
                                 'force_mail' => '强制忽略用户选择，解决回复审核后评论无通知。',
                                 'force_wait' => '启用间隔时间以应对反垃圾策略。(建议)',
-                                'to_log' => '记录邮件发送日志。(开发模式)'
+                                'to_log' => '记录邮件发送日志。(开发模式)',
+                                'check_beta' => '检查开发版本（请不要在生产环境使用）'
                         ),
                         array('to_owner', 'to_guest'),
                         '其他设置',
@@ -261,10 +271,12 @@ class CommentToMail_Plugin implements Typecho_Plugin_Interface
 
         /**
          *  从服务器获取新版本信息
+         *  type: newVer, betaVer
+         *  @access public
          */
         public static function check_update($type)
         {
-                $api="https://files.uniartisan.com/api/{$type}";
+                $api="https://files.uniartisan.com/checkupdate/{$type}.txt";
                 $http = Typecho_Http_Client::get();
                 $http->setTimeout(3);
                 try {
@@ -338,7 +350,7 @@ class CommentToMail_Plugin implements Typecho_Plugin_Interface
          */
         public static function parseComment($comment)
         {
-                $options           = Typecho_Widget::widget('Widget_Options');
+                $options = Typecho_Widget::widget('Widget_Options');
                 $cfg = array(
                         'siteTitle' => $options->title,
                         'timezone'  => $options->timezone,
@@ -399,40 +411,3 @@ class CommentToMail_Plugin implements Typecho_Plugin_Interface
                 }
         }
 }
-/*V4.0.0（2017.09.08）
-1.基于原V3.1.0版本重新编写
-2.更新了PHP Mailer版本
-3.优化了使用SMTP发信的证书认证（QQ邮箱证书加密级别太低）
-4.修复使用QQ邮箱（非企业邮箱）的时候会发现邮件发不出去的BUG
-5.将异步触发更换为网址监控运行
-*******************************************************
-V4.1.1（2017.12.21）
-1.更新插件使用说明
-2.优化通知模板UI
-3.增添一个解决DT:SPM CODE 544错误的方案
-4.增添对php7.2的支持
-5.更多细节优化
-*******************************************************
-V4.1.2(2018.04.30)
-修复数据库导入时偶发性的“Database Query Error” 
-'solve544'
-V4.2.1(2018.12.20)
-1.修改部分函数引用，增添php7.3支持
-2.增添一个对于部分邮件供应商SPM的解决方案
-*******************************************************
-V4.2.2(2019.08.26)
-修复评论审核通过后没有发送邮件的Bug
-*******************************************************
-v4.2.3/4.2.4(2020.03.08/09)
-SMTP 加入 TLS 支持（目前支持 SSL、TLS)
-更新 PHPMailer 至 6.1.4 (原来为5.x,修复多个漏洞）
-修复待审核评论通过后无法邮件回复的设计疏忽
-优化之前蹩脚的 544 解决方案 
-代码细节整理
-*******************************************************
-v4.2.5(2020.03.10)
-新增邮件等待
-*******************************************************
-v4.2.6/4.2.7 
-更新检测，优化功能
-*/
