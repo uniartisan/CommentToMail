@@ -5,14 +5,14 @@
  *
  * @package CommentToMail
  * @author Uniartisan
- * @version 4.2.9
+ * @version 4.3.0
  * @link https://blog.uniartisan.com/archives/CommentToMail.html
- * latest dates 2020-08-10
+ * latest dates 2022-06-02
  */
 class CommentToMail_Plugin implements Typecho_Plugin_Interface
 {
         /** update 信息 */
-        public static $version = '4.2.9';
+        public static $version = '4.3.0';
 
         /** @var string 提交路由前缀 */
         public static $action = 'comment-to-mail';
@@ -76,16 +76,22 @@ class CommentToMail_Plugin implements Typecho_Plugin_Interface
                 echo "<a href='https://blog.uniartisan.com/archives/CommentToMail.html'>请在设置前仔细阅读相关说明</a>";
 
                 /* 检查版本更新 */
-                if (in_array('check_beta', Helper::options()->plugin('CommentToMail')->other) == true){
-                        $newVer = self::check_update("betaVer");
-                }
-                else{
+                try {
+                        if (in_array('check_beta', Helper::options()->plugin('CommentToMail')->other) == true){
+                                $newVer = self::check_update("betaVer");
+                        }
+                        else{
+                                $newVer = self::check_update("newVer");
+                        }
+                } catch (Exception $e) {
                         $newVer = self::check_update("newVer");
                 }
                 
-                if (strcmp(self::$version,$newVer) < 0 && $newVer != "Error") {
+                if($newVer == null){
+                        Typecho_Widget::widget('Widget_Notice')->set(_t('更新接口异常，可以去催一下开发者 ->  https://github.com/uniartisan/CommentToMail'), 'success');        
+                } elseif (version_compare(self::$version,$newVer) < 0 && $newVer != "0.0.0") {
                         Typecho_Widget::widget('Widget_Notice')->set(_t('请到 https://github.com/uniartisan/CommentToMail 更新插件，当前最新版：' . $newVer), 'success');
-                } elseif ($newVer == "Error") {
+                } elseif ($newVer == "0.0.0") {
                         Typecho_Widget::widget('Widget_Notice')->set(_t('对不起, 您的主机不支持 php-curl 扩展或没有打开 allow_url_fopen 功能, 无法自动检测更新'), 'fail');
                 } else {
                         Typecho_Widget::widget('Widget_Notice')->set(_t('欢迎 Star, Fork, Pull requests :)'), 'success');
@@ -276,16 +282,71 @@ class CommentToMail_Plugin implements Typecho_Plugin_Interface
          */
         public static function check_update($type)
         {
-                $api="https://files.uniartisan.com/checkupdate/{$type}.txt";
-                $http = Typecho_Http_Client::get();
-                $http->setTimeout(3);
+                $apiurl="https://files.uniartisan.com/checkupdate/{$type}.txt";                
+                $timeout = 10; // set to zero for no timeout  
+ 
                 try {
-                        $msg = $http->send($api);
+                        $ch = curl_init(); 
+                        curl_setopt ($ch, CURLOPT_URL,$apiurl);  
+                        curl_setopt ($ch, CURLOPT_RETURNTRANSFER, 1);   
+                        curl_setopt ($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (X11; Linux x86_64; rv:101.0) Gecko/20100101 Firefox/101.0 CommentToMail-update');  
+                        curl_setopt ($ch, CURLOPT_CONNECTTIMEOUT, $timeout);  
+                        $msg  = curl_exec($ch); 
                         return $msg;
                 } catch (Exception $e) {
-                        $msg = 'Error';
+                        $msg = '0.0.0';
                         return $msg;
                 }
+        }
+
+
+        /**
+        *  版本号比较  
+        *   @param $version1 版本A 如: 4.2.9 
+        *   @param $version2 版本B 如: 4.2.8
+        *   @return int -1:版本A小于版本B , 0:版本A等于版本B, 1:版本A大于版本B
+        *
+        *   版本号格式注意：
+        *     1.要求只包含:点和大于等于0小于等于2147483646的整数 的组合
+        *     2.boole型 true置1，false置0
+        *     3.不设位默认补0计算，如：版本号5等于版号5.0.0
+        *     4.不包括数字 或 负数 的版本号 ,统一按0处理
+        *
+        *   @example:
+        *       if (versionCompare('4.2.8','4.2.9')<0) {
+        *            echo '版本1小于版本2';
+        *       }
+        *  @access public
+        */
+        public static function versionCompare($versionA,$versionB) {
+                if ($versionA>2147483646 || $versionB>2147483646) {
+                        throw new Exception('版本号,位数太大暂不支持!','101');
+                }
+                $dm = '.';
+                $verListA = explode($dm, (string)$versionA);
+                $verListB = explode($dm, (string)$versionB);
+        
+                $len = max(count($verListA),count($verListB));
+                $i = -1;
+                while ($i++<$len) {
+                        $verListA[$i] = intval(@$verListA[$i]);
+                        if ($verListA[$i] <0 ) {
+                                $verListA[$i] = 0;
+                        }
+                        $verListB[$i] = intval(@$verListB[$i]);
+                        if ($verListB[$i] <0 ) {
+                                $verListB[$i] = 0;
+                        }
+                
+                        if ($verListA[$i]>$verListB[$i]) {
+                                return 1;
+                        } else if ($verListA[$i]<$verListB[$i]) {
+                                return -1;
+                        } else if ($i==($len-1)) {
+                                return 0;
+                        }
+                }
+        
         }
 
         /**
