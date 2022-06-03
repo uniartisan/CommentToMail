@@ -5,14 +5,14 @@
  *
  * @package CommentToMail
  * @author Uniartisan
- * @version 4.3.0
+ * @version 4.3.1
  * @link https://blog.uniartisan.com/archives/CommentToMail.html
- * latest dates 2022-06-02
+ * latest dates 2022-06-03
  */
 class CommentToMail_Plugin implements Typecho_Plugin_Interface
 {
         /** update 信息 */
-        public static $version = '4.3.0';
+        public static $version = '4.3.1';
 
         /** @var string 提交路由前缀 */
         public static $action = 'comment-to-mail';
@@ -138,12 +138,30 @@ class CommentToMail_Plugin implements Typecho_Plugin_Interface
                 );
                 $form->addInput($user->addRule('required', _t('SMTP服务验证用户名')));
 
-                $pass = new Typecho_Widget_Helper_Form_Element_Password(
-                        'pass',
-                        NULL,
-                        NULL,
-                        _t('SMTP密码')
-                );
+                $show_passwd = true;
+                try{
+                        $show_passwd = in_array('show_passwd', Helper::options()->plugin('CommentToMail')->other);
+                } catch (Exception $e) {
+                        $show_passwd = true;
+                }
+                if ($show_passwd == true){
+                        $pass = new Typecho_Widget_Helper_Form_Element_Text(
+                                'pass',
+                                NULL,
+                                NULL,
+                                _t('SMTP密码')
+                        );
+                }  else{
+                        $pass = new Typecho_Widget_Helper_Form_Element_Password(
+                                'pass',
+                                NULL,
+                                NULL,
+                                _t('SMTP密码')
+                        );
+                }
+                        
+                
+                
                 $form->addInput($pass->addRule('required', _t('SMTP服务验证密码')));
 
                 $validate = new Typecho_Widget_Helper_Form_Element_Checkbox(
@@ -218,6 +236,7 @@ class CommentToMail_Plugin implements Typecho_Plugin_Interface
                 $other = new Typecho_Widget_Helper_Form_Element_Checkbox(
                         'other',
                         array(
+                                'show_passwd' => '明文显示 SMTP 密码',
                                 'to_owner' => '有评论及回复时，发邮件通知博主。',
                                 'to_guest' => '评论被回复时，发邮件通知评论者。',
                                 'to_me' => '自己回复自己的评论时，发邮件通知。(同时针对博主和访客)',
@@ -226,7 +245,7 @@ class CommentToMail_Plugin implements Typecho_Plugin_Interface
                                 'to_log' => '记录邮件发送日志。(开发模式)',
                                 'check_beta' => '检查开发版本（请不要在生产环境使用）'
                         ),
-                        array('to_owner', 'to_guest'),
+                        array('to_owner', 'to_guest', 'force_wait', 'show_passwd'),
                         '其他设置',
                         _t('由于Typecho钩子限制，开启审核后通过审核会重复通知。')
                 );
@@ -237,7 +256,7 @@ class CommentToMail_Plugin implements Typecho_Plugin_Interface
                         NULL,
                         '1',
                         _t('强制间隔的时间'),
-                        _t('强制间隔的时间，缺省值为1秒，建议小于3秒,请填入整数时间\n此选项仅在开启时有效')
+                        _t('强制间隔的时间，缺省值为1秒，建议小于3秒,请填入整数时间。此选项仅在开启时有效')
                 );
                 $form->addInput($force_waiting_time->addRule('isInteger', _t('请填入整数时间')));
 
