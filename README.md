@@ -2,20 +2,21 @@
 
 **支持的 Typecho 版本 >=1.0**
 
-PHP 推荐版本 PHP7-PHP7.4 ，在PHP8.1测试过可以运行，但官方有些接口仍然没有迁移到PHP8,所以不推荐。
+PHP 推荐版本 PHP7-PHP7.4 ，在 PHP8.1 测试过可以运行，但官方有些接口仍然没有迁移到 PHP8,所以不推荐。
 
 ## 版权申明
 
 1. 插件原版本相关信息保留在插件文件的作者信息下方
 
-2. PHP Mailer文件来自于GitHub
+2. PHP Mailer 文件来自于GitHub
 
 3. 转载或重制请保留作者信息
 
 
 ## 下载地址
-1. https://blog.uniartisan.com/app/CommentToMail.zip
-2. Github Release 
+
+[Github Release](https://github.com/uniartisan/CommentToMail/releases)
+
 
 ## 提问的艺术
 https://github.com/ryanhanwu/How-To-Ask-Questions-The-Smart-Way/blob/master/README-zh_CN.md
@@ -24,63 +25,15 @@ https://github.com/ryanhanwu/How-To-Ask-Questions-The-Smart-Way/blob/master/READ
 >https://blog.uniartisan.com/archives/CommentToMail.html
 
 
-CommentToMail作为一款老牌Typecho邮件通知评论的插件，也有很多分支。
-
-2020.08.12 顺便做了一个更新检测还有反快速发信屏蔽的时间间隔选项
 
 
 **在反馈任何问题以前，请您认真查看：提问的艺术**
-
-更新日志
-
-**v4.2.5 (2020-03-10)**
-
-- 新增连续发送反垃圾策略。
-- **这是个正式版本**
-
-
-
-**v4.2.4 (2020-03-09)**
-
-- 修复待审核评论通过审核后无法回复邮件的问题。
-- 544和忽视用户选择请在设置开启。
-
-**v4.2.3 （2020-03-08）**
-
-- SMTP 加入 TLS 支持（目前支持 SSL、TLS)
-- 更新 PHPMailer 至 6.1.4 (原来为5.x,修复多个漏洞）
-- 优化之前蹩脚的 544 解决方案
-- 代码细节整理
-- PHP 支持 5.6/7.x
-
-v4.2.2（2019.08.37）
-
-> 修复通过邮件审核后未发送邮件的设计疏忽
-
-V4.0.0（2017.09.08）
-
-> 1.基于原V3.1.0版本重新编写
-> 2.更新了PHP Mailer版本
-> 3.优化了使用SMTP发信的证书认证（QQ邮箱证书加密级别太低）
-> 4.修复使用QQ邮箱（非企业邮箱）的时候会发现邮件发不出去的BUG
-> 5.将异步触发更换为网址监控运行
-
-V4.1.1（2017.12.21）
-
-> 1.更新插件使用说明
-> 2.优化通知模板UI
-> 3.增添一个解决DT:SPM CODE 544错误的方案
-> 4.更多细节优化
-
-V4.1.2(2018.04.30)
-
-> 修复数据库导入时偶发性的“Database Query Error” (感谢 [权那他][1] 的指正)
 
 
 
 **版权申明**
 1.插件原版本及作者相关信息保留在插件文件的作者信息下方
-2.PHP Mailer文件来自于GitHub
+2.[PHP Mailer](https://github.com/PHPMailer/PHPMailer/) 文件来自于 GitHub
 3.转载或重制请保留作者信息
 
 ## 使用方法
@@ -121,12 +74,19 @@ V4.1.2(2018.04.30)
 ## 常见问题
 
 1.Key是邮件任务执行密码，防止他人恶意执行任务消耗资源
+
 2.下方任务执行地址就是说当你访问这个网址时，邮件任务才会执行，为了达到自动发送的效果，我们设置cron或者网址监控，每隔一段时间让远程服务器代替你访问任务执行网址
+
 3.执行验证是用来调试和应对特殊环境，一般不要勾选！
+
 4.可以清理邮件发送信息
+
 5.QQ邮箱smtp密码需要在邮箱网页端获取，具体配置信息可以参考度娘
+
 6.测试普通QQ邮箱可以正常发送，但可能由于腾讯反垃圾邮件逻辑，用户不能正常接受邮件，建议大家使用QQ域名邮箱，如果你没有域名邮箱，可以通过邮件联系我，或者直接在下方留言
+
 7.本插件仅支持typecho1.0及之后版本
+
 8.如果出现 邮件发送失败：SMTP connect() failed. （PHP>=5.6）可以参考这篇博文 https://9sb.org/45
 
 ## 写在最后
@@ -134,7 +94,9 @@ V4.1.2(2018.04.30)
 ---
 
 **在反馈任何问题以前，请您认真查看：提问的艺术**
-[button color="info" icon="fontello fontello-cogs" url="https:\/\/github.com\/ryanhanwu\/How-To-Ask-Questions-The-Smart-Way\/blob\/master\/README-zh_CN.md"]How-To-Ask-Questions-The-Smart-Way[/button]
+
+[How-To-Ask-Questions-The-Smart-Way](https://github.com/ryanhanwu/How-To-Ask-Questions-The-Smart-Way/blob/master/README-zh_CN.md
+)
 
 ---
 
