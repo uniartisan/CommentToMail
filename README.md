@@ -24,10 +24,11 @@ https://github.com/ryanhanwu/How-To-Ask-Questions-The-Smart-Way/blob/master/READ
 ## 使用方法
 >https://blog.uniartisan.com/archives/CommentToMail.html
 
+更新时无需禁用插件，直接覆盖上传新版本即可，4.3.0版本开始在程序内新增检测接口，若检测接口异常可以新建 issue 告知。
+
+**某些版本更新可能需要禁用插件并重新配置！**
 
 
-
-**在反馈任何问题以前，请您认真查看：提问的艺术**
 
 
 ## 使用方法
@@ -46,7 +47,7 @@ https://github.com/ryanhanwu/How-To-Ask-Questions-The-Smart-Way/blob/master/READ
 
 4.设置cron监控
 
-将下面的代码设置成每 5 分钟运行一次即可（需要修改成自己的网址），可以使用 crotab 或者使用面板提供的定时任务功能。
+将下面的代码设置成每 5 分钟运行一次即可（需要修改成自己的网址），可以使用 crontab 或者使用面板提供的定时任务功能。
 ```
 curl -k "https://example.com/action/comment-to-mail?do=deliverMail&key=114514" >> ./log.txt
 ```
